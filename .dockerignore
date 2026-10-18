@@ -1,0 +1,27 @@
+# 镜像用 npm install -g 拉发布包，不引用本仓库源码；
+# 这里的忽略项只是为了压缩 build context 体积、不让无关文件进镜像层。
+node_modules
+**/node_modules
+**/lib
+**/dist
+.git
+.github
+.agents
+.claude
+tsconfig*.tsbuildinfo
+examples/**/node_modules
+examples/**/lib
+packages/**/node_modules
+packages/**/lib
+apps/**/node_modules
+apps/**/lib
+apps/**/dist
+website
+assets
+*.log
+.coverage
+coverage
+.worktrees
+worktrees
+.playwright-mcp
+.humanize

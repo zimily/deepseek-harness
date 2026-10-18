@@ -1,0 +1,36 @@
+services:
+  dsh-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dsh:0.2.1-rc.2
+    container_name: dsh-web
+    restart: unless-stopped
+    ports:
+      # dsh web token-signs every API call and the WebSocket stream
+      # (packages/bundle/web-app/README.zh.md:65), so binding 0.0.0.0 here
+      # plus the dsh webserver bind via patch overlay still leaves the
+      # surface auth-gated by `?token=...`.
+      - "3080:3080"
+    env_file:
+      - .env                   # DEEPSEEK_API_KEY / DEEPSEEK_BASE_URL
+    environment:
+      # 持久化目录；packages/util/home-paths/src/index.ts:18 用 DSH_HOME 覆盖默认 ~/.dsh
+      DSH_HOME: /dsh/home
+      # 容器里没必要外发遥测，参考 apps/cli/src/profile-boot.ts:80-83
+      DSH_TELEMETRY_DISABLED: "1"
+    volumes:
+      - dsh-home:/dsh/home     # session / profile / settings / log 都落这里
+    healthcheck:
+      # dsh web 默认 GET / 返回 SPA index（200）。用 node 自带 http，镜像里没有 curl/wget。
+      test:
+        - "CMD-SHELL"
+        - "node -e \"require('http').get('http://127.0.0.1:3080/', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s       # dsh 首次启动要拉 cordis plugin tree，给 30s
+
+volumes:
+  dsh-home:
+    name: dsh-home

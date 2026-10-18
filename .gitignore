@@ -6,6 +6,8 @@ apps/desktop/*.p12
 node_modules/
 lib/
 *.tsbuildinfo
+build.log
+docker-compose.log
 pnpm-debug.log
 .pnpm-store/
 .cache/
