@@ -15,11 +15,11 @@ RUN apt-get update \
       tini ca-certificates socat iproute2 \
  && rm -rf /var/lib/apt/lists/*
 
-# 版本与仓库根 package.json 对齐（0.2.1-rc.2）。
+# 版本与仓库根 package.json 对齐（0.2.1-rc.3）。
 # 用 npm 而非 pnpm：发布到 npm 的是 @deepseek-ai/dsh，npm 会按 optionalDependencies
 # 拉对应当前平台的 node-addon-require-builtin prebuild
 # （see apps/cli/package.json:83）。
-RUN npm install -g @deepseek-ai/dsh@0.2.1-rc.2 \
+RUN npm install -g @deepseek-ai/dsh@0.2.1-rc.3 \
  && npm cache clean --force
 
 ENV NODE_ENV=production \
@@ -38,7 +38,7 @@ USER node
 
 EXPOSE 3080
 
-# 用 entrypoint 在 dsh web 启动前注入 patch（dsh init profile 会覆盖 image
-# 内嵌的 cordis.patch.yml 成 shipped []，见 entrypoint.sh 顶部注释）。
+# entrypoint.sh 做两件事：先起 socat 反代桥（容器 eth0 IP:3080 → dsh 的
+# 127.0.0.1:3080），再 exec tini 当 PID 1 把 SIGTERM/SIGINT 转给 dsh。
 ENTRYPOINT ["/usr/local/bin/dsh-entrypoint.sh"]
 CMD ["dsh", "web", "--no-open"]

@@ -2,19 +2,21 @@
 # Docker entrypoint for dsh-web.
 #
 # 为什么需要这个脚本（vs 直接用 ENTRYPOINT ["/usr/bin/tini", "--"]）：
-#   dsh CLI 在 0.2.1-rc.2 拒绝 --host 0.0.0.0
-#   （packages/bundle/web-app/src/startup.ts:96："unspecified (wildcard)
+#   dsh CLI 拒绝 --host 0.0.0.0
+#   （packages/bundle/web-app/src/startup.ts:95-96："unspecified (wildcard)
 #   address... binding every interface would expose remote code execution
-#   to the network"），并且源码层 hardcoded 只接受 '127.0.0.1' / '0.0.0.0'
-#   （packages/host/webserver/src/index.ts:61）。
+#   to the network"）。webserver 配置层同样拒通配地址，但接受任意具体 IP
+#   字面量（packages/host/webserver/src/index.ts:359-364）。
 #   Docker Desktop on Windows + NAT 端口转发对 127.0.0.1 监听器不工作
 #   （实测：容器内 0.0.0.0:3090 经 NAT 也连不到 host；docker-proxy + WinNAT
 #   在该平台有 loopback RST bug）。所以让 dsh 仍默认 listen loopback，
-#   外层 socat listen 在 0.0.0.0:3080，反向代理到 dsh 的 127.0.0.1:3080。
+#   外层 socat listen 在容器 eth0 IP:3080，反向代理到 dsh 的 127.0.0.1:3080。
 #   dsh web 仍要求 ?token= 做认证（packages/bundle/web-app/README.zh.md:65）。
 #
 #   这个约定是社区方案：见 geeknote.net/Rei/posts/3430（node:24 + socat）。
 #   比改 cordis patch overlay（plugin tree `id:` / `name:` 语义复杂）稳。
+#   （另一条路是直接 dsh web --host $(hostname -i)，上游也这么文档；
+#   packages/bundle/web-app/README.zh.md:69-71。尚未在本机验证。）
 
 set -eu
 

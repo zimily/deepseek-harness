@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: dsh:0.2.1-rc.2
+    image: dsh:0.2.1-rc.3
     container_name: dsh-web
     restart: unless-stopped
     ports:
